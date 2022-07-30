@@ -14,6 +14,9 @@ redisClient.on('connect', function () {
 const WINDOW_SIZE_IN_HOURS = 24;
 const MAX_WINDOW_REQUEST_COUNT = 20;
 const WINDOW_LOG_INTERVAL_IN_HOURS = 1;
+const MAX_OTP_MESSAGE_LIMIT = 100;
+const MAX_WEATHER_NOTIFICATIONS_LIMIT = 4;
+const MAX_REMINDERS_LIMIT = 5;
 
 // helper functions
 
@@ -27,11 +30,11 @@ const getIsUserOverLimit = (instances, messageType, subscriberId) => {
 
   switch(messageType) {
     case 'OTP':
-      return res > 100;
+      return res > MAX_OTP_MESSAGE_LIMIT;
     case 'Weather':
-      return res > 4;
+      return res > MAX_WEATHER_NOTIFICATIONS_LIMIT;
     case 'Reminders':
-      return res > 5;
+      return res > MAX_REMINDERS_LIMIT;
     default:
       return false; // unsupported messageType shouldn't be allowed to send
   }
@@ -98,7 +101,7 @@ app.post('/', async (req, res, next) => {
         // if record is found, parse it's value and calculate number of requests users has made within the last window
         let data = JSON.parse(record);
         const isTotalRequestsOverLimit = getIsTotalRequestOverLimit(data);
-        const isUserOverLimit = getIsUserOverLimit(instance, req.body.messageType, req.body.subscriberId);
+        const isUserOverLimit = getIsUserOverLimit(data, req.body.messageType, req.body.subscriberId);
 
         if (!isTotalRequestsOverLimit && !isUserOverLimit) {
           return false;
